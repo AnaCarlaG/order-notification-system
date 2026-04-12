@@ -2,6 +2,7 @@ package com.github.anacarlag.order_service.service;
 
 import com.github.anacarlag.order_service.dto.OrderRequestDTO;
 import com.github.anacarlag.order_service.dto.OrderResponseDTO;
+import com.github.anacarlag.order_service.exceptions.OrderNotFoundException;
 import com.github.anacarlag.order_service.model.Order;
 import com.github.anacarlag.order_service.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class OrderService {
     
     public OrderResponseDTO getOrderById(Long id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+                .orElseThrow(() -> new OrderNotFoundException(id));
         return mapToResponseDTO(order);
     }
     public List<OrderResponseDTO> getAllOrders() {
