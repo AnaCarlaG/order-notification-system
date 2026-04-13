@@ -2,8 +2,10 @@ package com.github.anacarlag.order_service.service;
 
 import com.github.anacarlag.order_service.dto.OrderRequestDTO;
 import com.github.anacarlag.order_service.dto.OrderResponseDTO;
+import com.github.anacarlag.order_service.event.OrderCreatedEvent;
 import com.github.anacarlag.order_service.exceptions.OrderNotFoundException;
 import com.github.anacarlag.order_service.model.Order;
+import com.github.anacarlag.order_service.producer.OrderProducer;
 import com.github.anacarlag.order_service.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import java.util.List;
 public class OrderService {
 
     private final IOrderRepository orderRepository;
+    private final OrderProducer orderProducer;
 
     public OrderResponseDTO createOrder(OrderRequestDTO orderRequestDTO) {
         Order order = Order.builder()
@@ -22,6 +25,17 @@ public class OrderService {
                 .amount(orderRequestDTO.getAmount())
                 .build();
         Order savedOrder = orderRepository.save(order);
+
+        OrderCreatedEvent event = OrderCreatedEvent.builder()
+                .id(savedOrder.getId())
+                .customerName(savedOrder.getCustomerName())
+                .productName(savedOrder.getProductName())
+                .amount(savedOrder.getAmount())
+                .status(savedOrder.getStatus())
+                .createdAt(savedOrder.getCreatedAt())
+                .build();
+        // Publish event to Kafka
+        orderProducer.sendOrderCreatedEvent(event);
         return mapToResponseDTO(savedOrder);
     }
     

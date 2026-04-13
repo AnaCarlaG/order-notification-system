@@ -5,6 +5,7 @@ import com.github.anacarlag.order_service.dto.OrderResponseDTO;
 import com.github.anacarlag.order_service.exceptions.OrderNotFoundException;
 import com.github.anacarlag.order_service.model.Order;
 import com.github.anacarlag.order_service.model.OrderStatus;
+import com.github.anacarlag.order_service.producer.OrderProducer;
 import com.github.anacarlag.order_service.repository.IOrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ import static org.mockito.Mockito.*;
 public class OrderServiceTest {
 
     @Mock
+    private OrderProducer orderProducer;
+
+    @Mock
     private IOrderRepository orderRepository;
 
     @InjectMocks
@@ -36,7 +40,7 @@ public class OrderServiceTest {
     private OrderRequestDTO orderRequestDTO;
 
     @BeforeEach
-    void SetUp(){
+    void SetUp() {
         order = Order.builder()
                 .id(1L)
                 .customerName("Ana Carla")
@@ -64,6 +68,7 @@ public class OrderServiceTest {
         assertThat(responseDTO.getStatus()).isEqualTo(OrderStatus.PENDING);
         verify(orderRepository, times(1)).save(any(Order.class));
     }
+
     @Test
     void testGetOrderByIdSuccess() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -76,16 +81,18 @@ public class OrderServiceTest {
         assertThat(responseDTO.getAmount()).isEqualTo(new BigDecimal("4500.00"));
         assertThat(responseDTO.getStatus()).isEqualTo(OrderStatus.PENDING);
     }
+
     @Test
-    void testGetOrderByIdNotFound(){
+    void testGetOrderByIdNotFound() {
         when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.getOrderById(99L))
                 .isInstanceOf(OrderNotFoundException.class)
                 .hasMessageContaining("Order not found with ID: " + 99L);
     }
+
     @Test
-    void shouldReturnAllOrders(){
+    void shouldReturnAllOrders() {
         when(orderRepository.findAll()).thenReturn(List.of(order));
 
         List<OrderResponseDTO> orders = orderService.getAllOrders();
